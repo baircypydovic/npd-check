@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Проверка рисков 115-ФЗ и лимита НПД для самозанятых</title>
+<meta name="description" content="Калькулятор лимита 2,4 млн ₽ и риска блокировки карты по 115-ФЗ для самозанятых и ИП на НПД.">
+<style>
+:root{
+  --bg:#eef1f5; --card:#fff; --ink:#0f1b2d; --muted:#5b6b82; --line:#e1e6ee;
+  --blue:#1d4ed8; --blue-soft:#e8eefc;
+  --green:#0b9f6c; --green-dark:#087a53; --green-soft:#e3f6ee;
+  --amber:#b7791f; --amber-soft:#fdf3dc;
+  --red:#d03a3a; --red-soft:#fde8e8;
+  --shadow:0 1px 2px rgba(15,27,45,.06),0 8px 24px rgba(15,27,45,.07);
+  --r:20px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+h1,h2,h3{line-height:1.15;margin:0;letter-spacing:-.02em}
+section{padding:36px 0}
+
+/* hero */
+.hero{padding:64px 0 28px}
+.hero h1{font-size:clamp(30px,5.2vw,52px);font-weight:800;max-width:17em}
+.hero p{font-size:clamp(16px,2vw,20px);color:var(--muted);max-width:40em;margin:18px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px;color:var(--muted)}
+
+h2{font-size:clamp(22px,3vw,30px);font-weight:750;margin-bottom:18px}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:1.05fr 1fr;gap:20px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:28px}
+.label{font-weight:650;font-size:15px;margin-bottom:10px;display:block}
+.income{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.income output{font-size:clamp(32px,5vw,44px);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.income span{color:var(--muted);font-size:15px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;background:linear-gradient(to right,var(--green) var(--p,0%),#dfe5ee var(--p,0%));outline:none;margin:14px 0 6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:3px solid var(--green);box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--green);box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer}
+input[type=range]:focus-visible{outline:3px solid var(--blue-soft);outline-offset:6px}
+.scale{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#eef1f5;border-radius:14px;padding:5px;margin-top:6px}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.seg span{display:block;text-align:center;padding:12px 10px;border-radius:10px;font-weight:600;font-size:14px;color:var(--muted);transition:background .15s,color .15s,box-shadow .15s}
+.seg input:checked+span{background:#fff;color:var(--blue);box-shadow:0 1px 4px rgba(15,27,45,.15)}
+.seg input:focus-visible+span{outline:3px solid var(--blue-soft)}
+.field{margin-bottom:26px}.field:last-child{margin-bottom:0}
+.hint{font-size:13px;color:var(--muted);margin-top:10px}
+
+/* result */
+.stat{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.stat small{color:var(--muted);font-size:14px;display:block}
+.stat strong{font-size:clamp(26px,4vw,34px);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.bar{position:relative;height:14px;border-radius:99px;background:#e3e8f0;margin:18px 0 6px;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;width:0;border-radius:99px;background:var(--green);transition:width .25s ease,background .25s}
+.barlabels{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.badge{display:flex;gap:12px;align-items:flex-start;border-radius:14px;padding:14px 16px;margin-top:16px;font-size:14.5px}
+.badge b{display:block;font-size:15px;margin-bottom:2px}
+.badge .dot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:6px}
+.ok{background:var(--green-soft)}.ok .dot{background:var(--green)}
+.warn{background:var(--amber-soft)}.warn .dot{background:#e0a21b}
+.bad{background:var(--red-soft)}.bad .dot{background:var(--red)}
+.risk-title{font-size:13px;color:var(--muted);margin-top:22px;font-weight:600}
+.tips{margin:14px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.tips li{margin-bottom:4px}
+.taxline{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:18px;padding-top:14px;font-size:14px;color:var(--muted)}
+.taxline b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* banks */
+.banks{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.bank{display:flex;flex-direction:column}
+.bank header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.logo{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px}
+.bank h3{font-size:20px}
+.bank .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.bank ul{list-style:none;padding:0;margin:0 0 22px;flex:1}
+.bank li{position:relative;padding:8px 0 8px 28px;border-top:1px solid var(--line);font-size:15px}
+.bank li::before{content:"";position:absolute;left:2px;top:13px;width:14px;height:8px;border-left:2.5px solid var(--green);border-bottom:2.5px solid var(--green);transform:rotate(-45deg) scale(.85)}
+.btn{display:block;text-align:center;text-decoration:none;background:var(--green);color:#fff;font-weight:700;font-size:16px;padding:15px 18px;border-radius:14px;box-shadow:0 6px 16px rgba(11,159,108,.35);transition:background .15s,transform .1s,box-shadow .15s}
+.btn:hover{background:var(--green-dark);box-shadow:0 8px 20px rgba(11,159,108,.45)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.note{font-size:13px;color:var(--muted);margin-top:16px}
+
+/* faq */
+.faq{display:grid;gap:12px}
+details{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:0 22px}
+summary{cursor:pointer;list-style:none;padding:18px 28px 18px 0;font-weight:650;font-size:17px;position:relative}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:26px;font-weight:400;color:var(--blue);transition:transform .2s}
+details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
+summary:focus-visible{outline:3px solid var(--blue-soft);border-radius:8px}
+details p{margin:0 0 18px;color:var(--muted)}
+details p+p{margin-top:-6px}
+
+footer{padding:28px 0 56px;font-size:13px;color:var(--muted)}
+
+@media (max-width:860px){
+  .calc,.banks{grid-template-columns:1fr}
+  .hero{padding-top:40px}
+  .card{padding:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Проверка рисков 115-ФЗ и лимита НПД для самозанятых</h1>
+    <p>Как безопасно принимать оплату от физлиц и юрлиц в 2026 году: посчитайте годовой доход, проверьте запас до лимита 2,4 млн ₽ и оцените шанс, что банк заблокирует обычную карту.</p>
+    <div class="chips">
+      <span class="chip">Лимит НПД: 2 400 000 ₽ в год</span>
+      <span class="chip">Ставка 4% с физлиц</span>
+      <span class="chip">Ставка 6% с юрлиц и ИП</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section aria-labelledby="calc-title">
+    <h2 id="calc-title">Калькулятор лимита и рисков</h2>
+    <div class="calc">
+      <div class="card">
+        <div class="field">
+          <label class="label" for="income">Ежемесячный доход</label>
+          <div class="income"><output id="incomeOut" for="income">100 000</output><span>₽ в месяц</span></div>
+          <input type="range" id="income" min="20000" max="400000" step="5000" value="100000">
+          <div class="scale"><span>20 000 ₽</span><span>400 000 ₽</span></div>
+        </div>
+        <div class="field">
+          <span class="label" id="typeLabel">Кто платит вам</span>
+          <div class="seg" role="radiogroup" aria-labelledby="typeLabel">
+            <label><input type="radio" name="client" value="phys" checked><span>Физлица (переводы на карту)</span></label>
+            <label><input type="radio" name="client" value="legal"><span>Юрлица и ИП (оплата по договору)</span></label>
+          </div>
+          <p class="hint">Расчёт ориентировочный: он показывает, на что обычно смотрят банки, а не гарантирует решение конкретного банка.</p>
+        </div>
+      </div>
+
+      <div class="card" aria-live="polite">
+        <div class="stat">
+          <div><small>Доход за год</small><strong id="yearOut">1 200 000 ₽</strong></div>
+          <div style="text-align:right"><small>Использовано от лимита</small><strong id="pctOut">50%</strong></div>
+        </div>
+        <div class="bar" role="progressbar" aria-label="Использование лимита НПД" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><i id="barFill"></i></div>
+        <div class="barlabels"><span>0 ₽</span><span>Лимит 2,4 млн ₽</span></div>
+
+        <div id="limitBadge" class="badge ok"><span class="dot"></span><div><b id="limitTitle"></b><span id="limitText"></span></div></div>
+
+        <div class="risk-title">Риск блокировки обычной карты по 115-ФЗ</div>
+        <div id="riskBadge" class="badge ok"><span class="dot"></span><div><b id="riskTitle"></b><span id="riskText"></span></div></div>
+
+        <ul class="tips" id="tips"></ul>
+
+        <div class="taxline"><span id="taxLabel">Налог за год</span><b id="taxOut"></b></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="banks-title">
+    <h2 id="banks-title">Счета для самозанятых и ИП на НПД</h2>
+    <div class="banks">
+      <article class="card bank">
+        <header><div class="logo" style="background:#ef3124">А</div><h3>Альфа-Банк</h3></header>
+        <p class="sub">Счёт для самозанятых и ИП на НПД</p>
+        <ul>
+          <li>0 ₽ за обслуживание</li>
+          <li>Авточеки в «Мой налог»</li>
+          <li>Приём оплат по СБП</li>
+        </ul>
+        <a class="btn" href="#">Открыть счет за 0 ₽</a>
+      </article>
+      <article class="card bank">
+        <header><div class="logo" style="background:#f5c400;color:#222">Т</div><h3>Т-Банк</h3></header>
+        <p class="sub">Счёт для самозанятых и ИП на НПД</p>
+        <ul>
+          <li>0 ₽ за обслуживание</li>
+          <li>Авточеки в «Мой налог»</li>
+          <li>Приём оплат по СБП</li>
+        </ul>
+        <a class="btn" href="#">Открыть счет за 0 ₽</a>
+      </article>
+      <article class="card bank">
+        <header><div class="logo" style="background:#0a5dc2">В</div><h3>ВТБ</h3></header>
+        <p class="sub">Счёт для самозанятых и ИП на НПД</p>
+        <ul>
+          <li>0 ₽ за обслуживание</li>
+          <li>Авточеки в «Мой налог»</li>
+          <li>Приём оплат по СБП</li>
+        </ul>
+        <a class="btn" href="#">Открыть счет за 0 ₽</a>
+      </article>
+    </div>
+    <p class="note">Условия тарифов могут меняться и зависеть от региона и статуса клиента. Перед открытием счёта проверьте актуальные условия на сайте банка.</p>
+  </section>
+
+  <section aria-labelledby="faq-title">
+    <h2 id="faq-title">Частые вопросы</h2>
+    <div class="faq">
+      <details>
+        <summary>Сохранится ли статус самозанятого при открытии ИП на НПД?</summary>
+        <p>Да, налоговый режим НПД можно применять и в статусе ИП. Но это один режим на оба статуса: лимит 2,4 млн ₽ в год считается общий, и действуют те же ограничения (нельзя нанимать сотрудников по трудовым договорам и перепродавать товары).</p>
+        <p>Если доход за год превысит лимит, право на НПД теряется, и ИП переходит на другой режим, например УСН. Порядок перехода и сроки проверьте в «Мой налог» или в ФНС.</p>
+      </details>
+      <details>
+        <summary>Нужно ли платить страховые взносы?</summary>
+        <p>Обязательных страховых взносов на НПД нет: ни у самозанятых, ни у ИП на НПД. Налог платите только с полученных доходов.</p>
+        <p>Но пенсионный стаж за эти периоды не копится. Если он вам важен, можно добровольно платить взносы в СФР.</p>
+      </details>
+      <details>
+        <summary>Как выставлять счета ООО?</summary>
+        <p>Заключите договор, выставьте счёт или акт с реквизитами ООО и получите оплату на расчётный счёт или карту. Затем сформируйте чек в «Мой налог», указав ИНН и название организации.</p>
+        <p>Чек юрлицу нужно передать не позже 9-го числа месяца, следующего за месяцем оплаты. Эти поступления облагаются по ставке 6%, а понятное назначение платежа и договор помогают снять вопросы у банка.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Расчёты носят справочный характер и не являются налоговой, юридической или финансовой консультацией. Актуальные правила уточняйте в ФНС и в вашем банке.</div>
+</footer>
+
+<script>
+(function(){
+  var MIN=20000, MAX=400000, LIMIT=2400000;
+  var $=function(id){return document.getElementById(id)};
+  var fmt=function(n){return Math.round(n).toLocaleString('ru-RU').replace(/\u00a0/g,' ')};
+  var income=$('income');
+
+  function setBadge(el,cls){el.className='badge '+cls}
+
+  function limitState(pct,year){
+    if(pct>=100) return {cls:'bad',color:'#d03a3a',t:'Лимит превышен',
+      x:'При таком доходе вы превысите 2,4 млн ₽ примерно к '+Math.ceil(LIMIT/(year/12))+'-му месяцу года. После превышения право на НПД теряется, и нужно переходить на другой режим.'};
+    if(pct>=90) return {cls:'bad',color:'#d03a3a',t:'Критически близко к лимиту',
+      x:'Запас всего '+fmt(LIMIT-year)+' ₽. Любая разовая оплата может вывести вас за лимит. Заранее решите, на какой режим перейдёте.'};
+    if(pct>=70) return {cls:'warn',color:'#e0a21b',t:'Приближаетесь к лимиту',
+      x:'Запас '+fmt(LIMIT-year)+' ₽. Следите за накопленным доходом в «Мой налог» и планируйте крупные платежи.'};
+    return {cls:'ok',color:'#0b9f6c',t:'Запас по лимиту есть',
+      x:'До лимита остаётся '+fmt(LIMIT-year)+' ₽ в год. Сейчас всё в пределах нормы.'};
+  }
+
+  function riskState(m,type){
+    var lvl;
+    if(type==='phys'){
+      lvl = m<50000?0 : m<120000?1 : m<250000?2 : 3;
+    } else {
+      lvl = m<200000?0 : m<350000?1 : 2;
+    }
+    var map=[
+      {cls:'ok',t:'Низкий риск',x:'Объём поступлений выглядит обычным для небольшой самозанятой деятельности.'},
+      {cls:'warn',t:'Умеренный риск',x:'Банк может запросить пояснения или документы по операциям. Держите под рукой чеки и договоры.'},
+      {cls:'bad',t:'Повышенный риск',x:'Регулярные крупные поступления от разных людей на личную карту часто привлекают внимание банка. Возможны ограничения операций.'},
+      {cls:'bad',t:'Высокий риск',x:'Большой оборот по личной карте от физлиц — типичный признак для проверки по 115-ФЗ. Лучше вести деятельность через отдельный счёт.'}
+    ];
+    return map[lvl];
+  }
+
+  function tipsFor(type,m){
+    var t=[];
+    if(type==='phys'){
+      t.push('Указывайте в переводах понятное назначение, например «оплата услуг» и дату.');
+      t.push('Выставляйте чек в «Мой налог» на каждую оплату в тот же день или к 9-му числу следующего месяца, если платит юрлицо.');
+      if(m>=50000) t.push('Откройте отдельный счёт для самозанятых и принимайте оплату по СБП или по ссылке.');
+      if(m>=120000) t.push('Храните переписку, акты и договоры, чтобы быстро ответить на запрос банка.');
+    } else {
+      t.push('Заключайте договор и подписывайте акты: это главные документы, которые просит банк.');
+      t.push('Просите платить на расчётный счёт или карту, привязанную к вашей деятельности.');
+      t.push('Передавайте чек юрлицу до 9-го числа следующего месяца с ИНН плательщика.');
+    }
+    return t;
+  }
+
+  function update(){
+    var m=+income.value;
+    var type=document.querySelector('input[name=client]:checked').value;
+    var year=m*12, pct=year/LIMIT*100;
+    var shown=Math.min(pct,100);
+
+    $('incomeOut').textContent=fmt(m);
+    income.style.setProperty('--p',((m-MIN)/(MAX-MIN)*100)+'%');
+    $('yearOut').textContent=fmt(year)+' ₽';
+    $('pctOut').textContent=Math.round(pct)+'%';
+
+    var fill=$('barFill'), ls=limitState(pct,year);
+    fill.style.width=shown+'%';
+    fill.style.background=ls.color;
+    document.querySelector('.bar').setAttribute('aria-valuenow',Math.round(shown));
+
+    setBadge($('limitBadge'),ls.cls);
+    $('limitTitle').textContent=ls.t;
+    $('limitText').textContent=ls.x;
+
+    var rs=riskState(m,type);
+    setBadge($('riskBadge'),rs.cls);
+    $('riskTitle').textContent=rs.t;
+    $('riskText').textContent=rs.x;
+
+    var rate=type==='phys'?0.04:0.06;
+    $('taxLabel').textContent='Налог за год по ставке '+(rate*100)+'%';
+    $('taxOut').textContent=fmt(year*rate)+' ₽';
+
+    $('tips').innerHTML=tipsFor(type,m).map(function(s){return '<li>'+s+'</li>'}).join('');
+  }
+
+  income.addEventListener('input',update);
+  document.querySelectorAll('input[name=client]').forEach(function(r){r.addEventListener('change',update)});
+  update();
+})();
+</script>
+</body>
+</html>
